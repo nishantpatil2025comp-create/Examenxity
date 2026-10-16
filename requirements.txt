@@ -1,0 +1,7 @@
+flask
+supabase
+pandas
+numpy
+scipy
+python-dotenv
+gunicorn

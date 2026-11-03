@@ -70,7 +70,7 @@ public class Product {
 
     // ==========================================================
     // Automatic Business Calculation Methods (Transient / Derived)
-    // These methods automatically serialize into the JSON response for the frontend.
+    // These methods automatically serialize into JSON for frontend / API consumers.
     // ==========================================================
 
     /**
@@ -87,30 +87,45 @@ public class Product {
      * Total Inventory Value = Remaining Stock * Purchase Price
      */
     @Transient
-    public Double getInventoryValue() {
+    public Double getTotalInventoryValue() {
         double cost = (this.purchasePrice != null) ? this.purchasePrice : 0.0;
         return round(getRemainingStock() * cost);
+    }
+
+    @Transient
+    public Double getInventoryValue() {
+        return getTotalInventoryValue();
     }
 
     /**
      * Total Sales Revenue = Sold Quantity * Selling Price
      */
     @Transient
-    public Double getSalesRevenue() {
+    public Double getTotalSalesRevenue() {
         int sold = (this.soldQuantity != null) ? this.soldQuantity : 0;
         double price = (this.sellingPrice != null) ? this.sellingPrice : 0.0;
         return round(sold * price);
     }
 
+    @Transient
+    public Double getSalesRevenue() {
+        return getTotalSalesRevenue();
+    }
+
     /**
-     * Total Net Profit = Total Sales Revenue - Cost of Goods Sold (Sold Quantity * Purchase Price)
+     * Total Profit = Total Sales Revenue - Cost of Goods Sold (Sold Quantity * Purchase Price)
      */
     @Transient
-    public Double getNetProfit() {
+    public Double getTotalProfit() {
         int sold = (this.soldQuantity != null) ? this.soldQuantity : 0;
         double sellPrice = (this.sellingPrice != null) ? this.sellingPrice : 0.0;
         double buyPrice = (this.purchasePrice != null) ? this.purchasePrice : 0.0;
         return round(sold * (sellPrice - buyPrice));
+    }
+
+    @Transient
+    public Double getNetProfit() {
+        return getTotalProfit();
     }
 
     /**
@@ -190,4 +205,3 @@ public class Product {
         this.soldQuantity = soldQuantity;
     }
 }
-

@@ -15,6 +15,8 @@
     .stat-label { color: #59706b; font-size: .8rem; font-weight: 700; text-transform: uppercase; }
     .stat-value { font-size: 2rem; line-height: 1.15; }
     .section-head { border-bottom: 1px solid var(--line); }
+    .chart-panel { background: #fff; border-top: 3px solid var(--accent); padding: 1.25rem; }
+    .chart-frame { height: 360px; position: relative; }
     .table { --bs-table-bg: #fff; font-size: .9rem; }
     .table th { color: #49615b; white-space: nowrap; }
     .table-wrap { overflow-x: auto; }
@@ -52,6 +54,18 @@
             </article>
           </div>
         {% endfor %}
+      </section>
+
+      <section class="mb-5" aria-labelledby="performance-chart-title">
+        <div class="section-head d-flex justify-content-between align-items-end pb-2 mb-3">
+          <h2 class="h4 mb-0" id="performance-chart-title">Study time and exam performance</h2>
+          <span class="small-note">{{ study_hours|length }} paired responses</span>
+        </div>
+        <div class="chart-panel">
+          <div class="chart-frame">
+            <canvas id="study-performance-chart" role="img" aria-label="Scatter plot of study hours versus exam scores"></canvas>
+          </div>
+        </div>
       </section>
 
       <section class="mb-5">
@@ -105,5 +119,51 @@
       </section>
     {% endif %}
   </main>
+  {% if not error %}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <script>
+      const studyHours = {{ study_hours|tojson }};
+      const examScores = {{ exam_scores|tojson }};
+      const scatterPoints = studyHours.map((hours, index) => ({ x: hours, y: examScores[index] }));
+
+      new Chart(document.getElementById("study-performance-chart"), {
+        type: "scatter",
+        data: {
+          datasets: [{
+            label: "Student responses",
+            data: scatterPoints,
+            backgroundColor: "rgba(211, 102, 66, 0.72)",
+            borderColor: "#a94b31",
+            pointRadius: 5,
+            pointHoverRadius: 7
+          }]
+        },
+        options: {
+          maintainAspectRatio: false,
+          responsive: true,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: (context) => `${context.parsed.x} study hours, ${context.parsed.y}% exam score`
+              }
+            }
+          },
+          scales: {
+            x: {
+              title: { display: true, text: "Study hours" },
+              min: 0,
+              max: 24
+            },
+            y: {
+              title: { display: true, text: "Exam score (%)" },
+              min: 0,
+              max: 100
+            }
+          }
+        }
+      });
+    </script>
+  {% endif %}
 </body>
 </html>

@@ -27,6 +27,43 @@ FIELD_LABELS = {
 GRADE_BRACKETS = ["A", "B", "C", "D", "F"]
 
 
+def generate_student_feedback(anxiety_score, study_hours):
+    if anxiety_score >= 21:
+        anxiety_advice = (
+            "Your anxiety score is on the higher side. Before your next study block, "
+            "try a slow breathing reset: inhale gently for 4 counts and exhale for 6, "
+            "for about two minutes. Then choose one small task to focus on."
+        )
+    elif anxiety_score >= 11:
+        anxiety_advice = (
+            "Some exam nerves are showing up. Write down the next specific task, "
+            "then take a brief pause between study blocks to reset your attention."
+        )
+    else:
+        anxiety_advice = (
+            "Your reported anxiety is relatively low. Keep the routines that are "
+            "helping you feel steady, and make room for short breaks as you prepare."
+        )
+
+    if study_hours < 2:
+        study_advice = (
+            "For your study time, try two or three focused 25-minute sessions with "
+            "short breaks, using practice questions or active recall to make each session count."
+        )
+    elif study_hours > 8:
+        study_advice = (
+            "You have put in a substantial amount of study time. More hours are not "
+            "always more effective: step away regularly, eat and hydrate, and protect time for sleep."
+        )
+    else:
+        study_advice = (
+            "Your study time leaves room for a balanced routine. Try a short break "
+            "about once an hour and use practice questions to check what you remember."
+        )
+
+    return f"{anxiety_advice}\n\n{study_advice}"
+
+
 def parse_number(form, field, label, minimum, maximum):
     raw_value = form.get(field, "").strip()
     if not raw_value:
@@ -80,8 +117,11 @@ def build_statistics(rows):
                 "count": len(paired),
             })
 
+    scatter_rows = frame[["study_hours", "exam_score"]].dropna()
+    study_hours = scatter_rows["study_hours"].astype(float).tolist()
+    exam_scores = scatter_rows["exam_score"].astype(float).tolist()
     display_rows = frame.where(pd.notna(frame), None).to_dict(orient="records")
-    return summaries, correlations, display_rows
+    return summaries, correlations, display_rows, study_hours, exam_scores
 
 
 @app.route("/", methods=["GET", "POST"])
@@ -100,6 +140,10 @@ def index():
                 raise RuntimeError("Supabase is not configured. Add SUPABASE_URL and SUPABASE_KEY to your .env file.")
             supabase.table(TABLE_NAME).insert(response).execute()
             flash("Your response has been recorded. Thank you for taking part.", "success")
+            flash(
+                generate_student_feedback(response["anxiety_score"], response["study_hours"]),
+                "insights",
+            )
             return redirect(url_for("index"))
         except ValueError as error:
             flash(str(error), "danger")
@@ -114,10 +158,11 @@ def index():
 def dashboard():
     rows = []
     summaries, correlations = {}, []
+    study_hours, exam_scores = [], []
     error = None
     try:
         rows = fetch_responses()
-        summaries, correlations, rows = build_statistics(rows)
+        summaries, correlations, rows, study_hours, exam_scores = build_statistics(rows)
     except Exception as exception:
         app.logger.exception("Could not load dashboard data")
         error = str(exception) if isinstance(exception, RuntimeError) else "Survey data could not be loaded. Check the Supabase connection and table."
@@ -127,6 +172,8 @@ def dashboard():
         rows=rows,
         summaries=summaries,
         correlations=correlations,
+        study_hours=study_hours,
+        exam_scores=exam_scores,
         error=error,
         total_responses=len(rows),
     )

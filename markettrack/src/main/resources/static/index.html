@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MarketTrack – Smart Inventory & Marketing Management System</title>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Application Stylesheet -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="app-container">
+    <!-- ========================================================== -->
+    <!-- Sidebar Navigation -->
+    <!-- ========================================================== -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="brand-logo">
+                <i class="fa-solid fa-chart-line"></i>
+            </div>
+            <div class="brand-title">
+                <h2>MarketTrack</h2>
+                <span>DTIL Smart System</span>
+            </div>
+            <button class="mobile-close-btn" id="mobileCloseBtn">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <nav class="sidebar-nav">
+            <a href="#overview" class="nav-item active">
+                <i class="fa-solid fa-house"></i>
+                <span>Overview Dashboard</span>
+            </a>
+            <a href="#inventory" class="nav-item">
+                <i class="fa-solid fa-boxes-stacked"></i>
+                <span>Product Inventory</span>
+            </a>
+            <a href="#analytics" class="nav-item">
+                <i class="fa-solid fa-chart-pie"></i>
+                <span>Visual Analytics</span>
+            </a>
+            <a href="#low-stock" class="nav-item" id="navLowStock">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+                <span>Low Stock Alerts</span>
+                <span class="nav-badge" id="navLowStockBadge">0</span>
+            </a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="system-status">
+                <span class="status-indicator online"></span>
+                <div class="status-text">
+                    <p class="status-title">Server Active</p>
+                    <p class="status-desc">H2 Database Persistent</p>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- ========================================================== -->
+    <!-- Main Content Area -->
+    <!-- ========================================================== -->
+    <main class="main-content">
+        <!-- Top Navigation Header -->
+        <header class="topbar">
+            <div class="topbar-left">
+                <button class="menu-toggle-btn" id="menuToggleBtn">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+                <div class="page-title-group">
+                    <h1>Executive Dashboard</h1>
+                    <p>Real-time inventory levels, sales revenue, and marketing margins</p>
+                </div>
+            </div>
+
+            <div class="topbar-right">
+                <div class="search-box">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" id="searchInput" placeholder="Search product name...">
+                </div>
+                <button class="btn btn-primary" id="openAddModalBtn">
+                    <i class="fa-solid fa-plus"></i>
+                    <span>Add Product</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Low Stock Alert Banner (Dynamic) -->
+        <div class="alert-banner" id="alertBanner" style="display: none;">
+            <div class="alert-icon">
+                <i class="fa-solid fa-bell"></i>
+            </div>
+            <div class="alert-message">
+                <strong>Attention Required:</strong> You have <span id="bannerLowStockCount">0</span> product(s) with remaining stock under 5 units. Please reorder soon!
+            </div>
+            <button class="btn-sm btn-outline-alert" id="viewLowStockBtn">
+                View Low Stock
+            </button>
+        </div>
+
+        <!-- ========================================================== -->
+        <!-- KPI Metric Cards -->
+        <!-- ========================================================== -->
+        <section class="kpi-grid" id="overview">
+            <!-- Card 1: Total Revenue -->
+            <div class="kpi-card">
+                <div class="kpi-header">
+                    <span class="kpi-title">Sales Revenue</span>
+                    <div class="kpi-icon-box bg-purple">
+                        <i class="fa-solid fa-sack-dollar"></i>
+                    </div>
+                </div>
+                <div class="kpi-value" id="kpiRevenue">$0.00</div>
+                <div class="kpi-subtext positive">
+                    <i class="fa-solid fa-arrow-trend-up"></i>
+                    <span>Total earned from units sold</span>
+                </div>
+            </div>
+
+            <!-- Card 2: Total Net Profit -->
+            <div class="kpi-card">
+                <div class="kpi-header">
+                    <span class="kpi-title">Total Net Profit</span>
+                    <div class="kpi-icon-box bg-green">
+                        <i class="fa-solid fa-hand-holding-dollar"></i>
+                    </div>
+                </div>
+                <div class="kpi-value" id="kpiProfit">$0.00</div>
+                <div class="kpi-subtext positive">
+                    <i class="fa-solid fa-circle-check"></i>
+                    <span>Revenue minus inventory costs</span>
+                </div>
+            </div>
+
+            <!-- Card 3: Inventory Value -->
+            <div class="kpi-card">
+                <div class="kpi-header">
+                    <span class="kpi-title">Inventory Value</span>
+                    <div class="kpi-icon-box bg-blue">
+                        <i class="fa-solid fa-warehouse"></i>
+                    </div>
+                </div>
+                <div class="kpi-value" id="kpiInventoryValue">$0.00</div>
+                <div class="kpi-subtext neutral">
+                    <i class="fa-solid fa-cubes"></i>
+                    <span>Asset value in warehouse</span>
+                </div>
+            </div>
+
+            <!-- Card 4: Total Products -->
+            <div class="kpi-card">
+                <div class="kpi-header">
+                    <span class="kpi-title">Total Products</span>
+                    <div class="kpi-icon-box bg-teal">
+                        <i class="fa-solid fa-box"></i>
+                    </div>
+                </div>
+                <div class="kpi-value" id="kpiProducts">0</div>
+                <div class="kpi-subtext neutral">
+                    <i class="fa-solid fa-list-check"></i>
+                    <span>Unique inventory items</span>
+                </div>
+            </div>
+
+            <!-- Card 5: Low Stock Alerts -->
+            <div class="kpi-card kpi-card-warning" id="kpiLowStockCard">
+                <div class="kpi-header">
+                    <span class="kpi-title">Low Stock Alert</span>
+                    <div class="kpi-icon-box bg-amber">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                    </div>
+                </div>
+                <div class="kpi-value text-amber" id="kpiLowStock">0</div>
+                <div class="kpi-subtext alert">
+                    <i class="fa-solid fa-circle-exclamation"></i>
+                    <span>Items with stock &lt; 5 units</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================================== -->
+        <!-- Visual Analytics Section (Chart.js) -->
+        <!-- ========================================================== -->
+        <section class="analytics-grid" id="analytics">
+            <!-- Bar Chart: Revenue vs. Net Profit -->
+            <div class="chart-container-card">
+                <div class="card-header">
+                    <div class="card-title-group">
+                        <h3>Financial Performance</h3>
+                        <p>Revenue vs. Net Profit Comparison per Product</p>
+                    </div>
+                    <div class="card-tag">Sales Insights</div>
+                </div>
+                <div class="chart-canvas-wrapper">
+                    <canvas id="revenueProfitChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Doughnut Chart: Stock Distribution -->
+            <div class="chart-container-card">
+                <div class="card-header">
+                    <div class="card-title-group">
+                        <h3>Inventory Stock Breakdown</h3>
+                        <p>Units Remaining vs. Units Sold Distribution</p>
+                    </div>
+                    <div class="card-tag">Stock Ratio</div>
+                </div>
+                <div class="chart-canvas-wrapper doughnut-wrapper">
+                    <canvas id="stockDistributionChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================================== -->
+        <!-- Product Inventory Data Table Section -->
+        <!-- ========================================================== -->
+        <section class="table-section-card" id="inventory">
+            <div class="card-header table-header-flex">
+                <div class="card-title-group">
+                    <h3>Inventory Catalog & Sales Ledger</h3>
+                    <p>Live synchronized records with automatic profit & margin computation</p>
+                </div>
+
+                <div class="table-actions">
+                    <div class="filter-group">
+                        <button class="filter-chip active" id="filterAllBtn">All Products</button>
+                        <button class="filter-chip chip-warning" id="filterLowStockBtn">
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                            Low Stock Only
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="custom-table" id="productTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Product Name</th>
+                            <th>Purchase Price</th>
+                            <th>Selling Price</th>
+                            <th>Initial</th>
+                            <th>Sold</th>
+                            <th>Remaining Stock</th>
+                            <th>Sales Revenue</th>
+                            <th>Net Profit</th>
+                            <th class="text-center">Status</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="productTableBody">
+                        <!-- Populated dynamically via JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Empty State -->
+            <div class="empty-state" id="emptyState" style="display: none;">
+                <div class="empty-icon">
+                    <i class="fa-solid fa-box-open"></i>
+                </div>
+                <h4>No Products Found</h4>
+                <p>No inventory items match your current filter or search criteria.</p>
+                <button class="btn btn-secondary" id="resetFilterBtn">Reset Filters</button>
+            </div>
+        </section>
+    </main>
+</div>
+
+<!-- ========================================================== -->
+<!-- Modal: Add / Edit Product -->
+<!-- ========================================================== -->
+<div class="modal-backdrop" id="productModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <div class="modal-title-group">
+                <div class="modal-icon-badge" id="modalBadgeIcon">
+                    <i class="fa-solid fa-plus"></i>
+                </div>
+                <h3 id="modalTitle">Add New Product</h3>
+            </div>
+            <button class="modal-close-btn" id="closeModalBtn">&times;</button>
+        </div>
+
+        <form id="productForm">
+            <input type="hidden" id="productId">
+
+            <div class="form-group">
+                <label for="productName">Product Name <span class="required">*</span></label>
+                <div class="input-with-icon">
+                    <i class="fa-solid fa-tag"></i>
+                    <input type="text" id="productName" placeholder="e.g. Ergonomic Office Chair" required>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="purchasePrice">Purchase Price ($) <span class="required">*</span></label>
+                    <div class="input-with-icon">
+                        <i class="fa-solid fa-dollar-sign"></i>
+                        <input type="number" id="purchasePrice" step="0.01" min="0" placeholder="0.00" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="sellingPrice">Selling Price ($) <span class="required">*</span></label>
+                    <div class="input-with-icon">
+                        <i class="fa-solid fa-dollar-sign"></i>
+                        <input type="number" id="sellingPrice" step="0.01" min="0" placeholder="0.00" required>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="initialStock">Initial Stock (Units) <span class="required">*</span></label>
+                    <div class="input-with-icon">
+                        <i class="fa-solid fa-boxes-packing"></i>
+                        <input type="number" id="initialStock" min="0" placeholder="e.g. 50" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="soldQuantity">Sold Quantity (Units) <span class="required">*</span></label>
+                    <div class="input-with-icon">
+                        <i class="fa-solid fa-cart-shopping"></i>
+                        <input type="number" id="soldQuantity" min="0" placeholder="e.g. 10" required>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Real-time calculation helper preview box -->
+            <div class="calculation-preview-box">
+                <div class="preview-item">
+                    <span class="preview-label">Remaining:</span>
+                    <strong id="previewRemaining" class="preview-value">0 units</strong>
+                </div>
+                <div class="preview-item">
+                    <span class="preview-label">Unit Profit:</span>
+                    <strong id="previewUnitProfit" class="preview-value">$0.00</strong>
+                </div>
+                <div class="preview-item">
+                    <span class="preview-label">Est. Total Profit:</span>
+                    <strong id="previewEstProfit" class="preview-value text-green">$0.00</strong>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="cancelModalBtn">Cancel</button>
+                <button type="submit" class="btn btn-primary" id="saveProductBtn">
+                    <i class="fa-solid fa-floppy-disk"></i>
+                    <span>Save Product</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ========================================================== -->
+<!-- Toast Notification Element -->
+<!-- ========================================================== -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- Application Logic -->
+<script src="app.js"></script>
+</body>
+</html>
+
